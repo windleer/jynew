@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Jyx2;
@@ -111,7 +111,7 @@ public class BigMapZone : MonoBehaviour
 				if(command.StartsWith("IndoorTransport"))
                 {
 					var curMap=LevelMaster.Instance.GetCurrentGameMap();
-					mapKey += "&transport#" + curMap.Tags;
+					mapKey += "&transport#" + curMap.Tags.Split(',')[0];
 					LevelLoader.LoadGameMap(mapKey);
 				}else if(command.StartsWith("TransportWei")){
 					// add transport Wei to other hotel when leave hotel after meet him
