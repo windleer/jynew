@@ -104,10 +104,10 @@ namespace Jyx2
                     scene = int.Parse(LevelMaster.Instance.GetCurrentGameMap().Jyx2MapId);
                 }
 
+				var evt = GameEvent.GetCurrentGameEvent();
                 //事件ID
                 if(eventId == -2)
                 {
-                    var evt = GameEvent.GetCurrentGameEvent();
                     if (evt == null)
                     {
                         Debug.LogError("内部错误：当前的eventId为空，但是指定修改当前event");
@@ -115,7 +115,25 @@ namespace Jyx2
                         return;
                     }
                     eventId = int.Parse(evt.name); //当前事件
-                }
+                }else{
+					evt=GameEventManager.GetGameEventByID(eventId.ToString());
+				}
+				
+				if(interactiveEventId==-2||useItemEventId==-2||enterEventId==-2){
+					if(evt!=null){
+						if(interactiveEventId==-2){
+							interactiveEventId=evt.m_InteractiveEventId;
+						}
+						
+						if(useItemEventId==-2){
+							useItemEventId=evt.m_UseItemEventId;
+						}
+						
+						if(enterEventId==-2){
+							enterEventId=evt.m_EnterEventId;
+						}
+					}
+				}
 
                 //更新全局记录
                 runtime.ModifyEvent(scene, eventId, interactiveEventId, useItemEventId, enterEventId);
@@ -289,38 +307,41 @@ namespace Jyx2
                     scene = int.Parse(LevelMaster.Instance.GetCurrentGameMap().Jyx2MapId);
                 }
 
+				var evt=GameEvent.GetCurrentGameEvent();
                 //事件ID
                 if (eventId == -2)
                 {
-                    var evt = GameEvent.GetCurrentGameEvent();
                     if (evt == null)
                     {
                         Debug.LogError("内部错误：当前的eventId为空，但是指定修改当前event");
                         return;
                     }
                     eventId = int.Parse(evt.name); //当前事件
-                }
-
-				var curEvt=GameEventManager.GetCurrentGameEvent();
-				if(curEvt!=null){
-					if(v1==-2){//值为-2时，取当前值
-						v1=curEvt.m_InteractiveEventId;
-					}else if(v1>-1){
-						v1+=curEvt.m_InteractiveEventId;
-					}
-					if(v2==-2){
-						v2=curEvt.m_UseItemEventId;
-					}else if(v2>-1){
-						v2+=curEvt.m_UseItemEventId;
-					}
-					if(v3==-2){
-						v3=curEvt.m_EnterEventId;
-					}else if(v3>-1){
-						v3+=curEvt.m_EnterEventId;
-					}
-					//更新全局记录
-					runtime.ModifyEvent(scene, eventId, v1, v2, v3);
+                }else{
+					evt=GameEventManager.GetGameEventByID(eventId.ToString());
 				}
+
+				if(v1!=-1||v2!=-1||v3!=-1){
+					if(evt!=null){
+						if(v1==-2){//值为-2时，取当前值
+							v1=evt.m_InteractiveEventId;
+						}else if(v1>-1){
+							v1+=evt.m_InteractiveEventId;
+						}
+						if(v2==-2){
+							v2=evt.m_UseItemEventId;
+						}else if(v2>-1){
+							v2+=evt.m_UseItemEventId;
+						}
+						if(v3==-2){
+							v3=evt.m_EnterEventId;
+						}else if(v3>-1){
+							v3+=evt.m_EnterEventId;
+						}
+						//更新全局记录
+					}
+				}
+				runtime.ModifyEvent(scene, eventId, v1, v2, v3);
 
                 //刷新当前场景中的事件
                 LevelMaster.Instance.RefreshGameEvents();
@@ -754,12 +775,15 @@ namespace Jyx2
 
         }
 
-        //增加道德
-        static public void AddRepute(int daode)
+        //增加声望
+        static public void AddRepute(int value)
         {
             RunInMainThrad(() =>{
-                storyEngine.DisplayPopInfo("增加道德:" + daode);
+                runtime.Player.Shengwang = HSFrameWork.Common.Tools.Limit(runtime.Player.Shengwang + value, 0, GameConst.MAX_ZIZHI);
+                storyEngine.DisplayPopInfo("增加声望:" + value);
+                Next();
             });
+            Wait();
         }
 
         //韦小宝商店
@@ -767,9 +791,10 @@ namespace Jyx2
         {
             RunInMainThrad(() =>
             {
-                int shopId = Tools.GetRandomInt(0, 4);
-                Jyx2_UIManager.Instance.ShowUI("ShopUIPanel", shopId);
+                //int shopId = Tools.GetRandomInt(0, 4);
+                Jyx2_UIManager.Instance.ShowUI("ShopUIPanel", "", new Action(()=>{Next();}));
             });
+			Wait();
         }
 
         static public void AskSoftStar()
